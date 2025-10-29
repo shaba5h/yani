@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Download deps
+        run: go mod download
+
+      - name: Build
+        run: go build -ldflags="-s -w" ./...
+
+      - name: Test
+        run: go test ./... -race -count=1
+
+      - name: GolangCI-Lint (fast via go tool)
+        run: go tool golangci-lint run --timeout=5m --fast-only
+
+      - name: Buf Lint
+        if: ${{ hashFiles('**/*.proto') != '' }}
+        run: go tool buf lint
+
+      - name: Buf Generate (verify generation succeeds)
+        if: ${{ hashFiles('**/*.proto') != '' }}
+        run: go tool buf generate

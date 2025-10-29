@@ -1,0 +1,8 @@
+env = "local"
+
+[storage]
+dsn = "./storage/yani.db"
+
+[grpc]
+port = 50051
+timeout = "5s"

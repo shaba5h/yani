@@ -1,0 +1,44 @@
+.DS_Store
+Thumbs.db
+
+# IDE/editor files
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# Build output
+bin/
+build/
+dist/
+
+# Go binaries and test outputs
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Logs and coverage
+*.log
+coverage.out
+*.cov
+*.cover
+*.prof
+*.pprof
+
+# Env files
+.env
+.env.*
+.envrc
+
+# Temporary and cache directories
+tmp/
+.cache/
+ 
+# Config files: ignore real configs, keep example
+config/*.toml
+!config/config.example.toml

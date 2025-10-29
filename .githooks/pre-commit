@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-commit] format + lint"
+
+# Format only staged Go files to keep hook fast
+STAGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.go$' || true)
+if [[ -n "${STAGED_GO_FILES}" ]]; then
+  echo "[pre-commit] formatting staged files (gofmt + goimports)"
+  while IFS= read -r f; do
+    [[ -z "$f" ]] && continue
+    gofmt -s -w "$f"
+    go tool goimports -w "$f"
+    git add -- "$f"
+  done <<< "$STAGED_GO_FILES"
+fi
+
+# Lint (fast)
+echo "[pre-commit] golangci-lint"
+go tool golangci-lint run --fast-only
+
+echo "[pre-commit] OK"

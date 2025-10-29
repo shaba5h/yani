@@ -1,0 +1,5 @@
+* text=auto eol=lf
+
+# Treat generated code as generated for GitHub linguist
+gen/** linguist-generated=true
+vendor/** linguist-vendored=true

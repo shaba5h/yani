@@ -1,0 +1,104 @@
+version: '3'
+
+vars:
+  BIN_NAME: yani
+  MAIN_PACKAGE: ./cmd/yani
+
+env:
+  GO111MODULE: 'on'
+
+tasks:
+  build:
+    desc: Build the project binary
+    cmds:
+      - mkdir -p bin
+      - go build -ldflags="-s -w" -o bin/{{.BIN_NAME}} {{.MAIN_PACKAGE}}
+
+  run:
+    desc: Run the application (builds first)
+    deps:
+      - build
+    cmds:
+      - ./bin/{{.BIN_NAME}}
+    interactive: true
+
+  test:
+    desc: Run unit tests with race detector and coverage
+    cmds:
+      - go test ./... -race -coverprofile=coverage.out
+      - |
+        go tool cover -func=coverage.out | tail -n +2 || true
+
+  fmt:
+    desc: Format code (go fmt and optionally goimports)
+    cmds:
+      - go fmt ./...
+      - go tool goimports -w .
+
+  vet:
+    desc: Static analysis with go vet
+    cmds:
+      - go vet ./...
+
+  lint:
+    desc: Lint using golangci-lint if available
+    cmds:
+      - go tool golangci-lint run
+
+  tidy:
+    desc: Tidy and verify module dependencies
+    cmds:
+      - go mod tidy
+      - go mod verify
+
+  deps:
+    desc: Download all module dependencies
+    cmds:
+      - go mod download
+
+  clean:
+    desc: Remove build artifacts and coverage files
+    cmds:
+      - rm -rf bin coverage.out
+
+  config:init:
+    desc: Initialize local config from example
+    cmds:
+      - test -f config/config.toml || cp config/config.example.toml config/config.toml
+
+  tools:
+    desc: Install all tool dependencies recorded in go.mod
+    cmds:
+      - go install tool
+
+  tools:update:
+    desc: Upgrade all tools to latest and tidy module
+    cmds:
+      - go get -u tool
+      - go mod tidy
+
+  proto:gen:
+    desc: Generate Go code from api/proto/*.proto using buf
+    deps:
+      - tools
+    cmds:
+      - |
+        if find proto -type f -name '*.proto' >/dev/null 2>&1; then
+          go tool buf generate
+        else
+          echo "No .proto files found under proto/, skipping buf generate"
+        fi
+    sources:
+      - proto/**/*.proto
+    generates:
+      - gen/go/**/*.pb.go
+
+  proto:lint:
+    desc: Lint protobuf sources with buf (skips if none found)
+    cmds:
+      - |
+        if find proto -type f -name '*.proto' >/dev/null 2>&1; then
+          go tool buf lint
+        else
+          echo "No .proto files found under proto/, skipping buf lint"
+        fi
